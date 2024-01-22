@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  devbc express ts
+
+Globals:
+  Function:
+    Environment:
+      Variables:
+        TZ: Asia/Bangkok
+
+Parameters:
+  AppName:
+    Default: devbc-express-ts
+    Type: String
+  EnvName:
+    Description: Environment type
+    Default: runtest
+    Type: String
+    AllowedValues:
+      - production
+      - runtest
+
+Conditions:
+  IsProduction: !Equals [!Ref EnvName, production]
+
+Resources:
+  ProxyGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${AppName}-${EnvName}-endpoint"
+      StageName: latest
+  HttpApp:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AppName}-${EnvName}"
+      FunctionUrlConfig:
+        AuthType: NONE
+      Handler: lib/app.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 256
+      Events:
+        ProxyGateway:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  FunctionUrlEndpoint:
+    Description: "Backend URL Endpoint"
+    Value: !GetAtt HttpAppUrl.FunctionUrl
