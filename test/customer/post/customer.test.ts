@@ -5,16 +5,6 @@ import mysql, { type Connection } from "mysql2/promise";
 
 let connection: Connection;
 
-function getMysqlConn() {
-	return mysql.createConnection({
-		host: "127.0.0.1",
-		port: 3306,
-		user: "watsa",
-		password: "watsa",
-		database: "food_db",
-	});
-}
-
 beforeAll(async () => {
 	connection = await getMysqlConn();
 });
@@ -58,3 +48,6 @@ describe("check data after create customer", () => {
 		expect(result).toHaveLength(5);
 	});
 });
+function getMysqlConn(): mysql.Connection | PromiseLike<mysql.Connection> {
+	throw new Error("Function not implemented.");
+}
