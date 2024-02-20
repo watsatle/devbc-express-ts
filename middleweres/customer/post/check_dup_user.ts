@@ -10,27 +10,50 @@ type CustomerData = {
 	address: string;
 } & RowDataPacket;
 
-export const checkDuplicateUser: RequestHandler = (req, res, next) => {
+export const checkDuplicateUser: RequestHandler = async (req, res, next) => {
+	const conn = await mySqlConnection().catch(next);
+	if (!conn) return;
 	const validReqBody = req.body as mySchema;
-	let connection: Connection;
-	mySqlConnection()
-		.then((conn) => {
-			connection = conn;
-			return conn.query<CustomerData[]>(
-				`SELECT * FROM customers WHERE email = ${mysql.escape(
-					validReqBody.email,
-				)}`,
-			);
-		})
-		.then(([rows]) => {
-			// connection.end();
-			console.log("->", rows);
-			if (rows.length > 0) {
-				return res.status(400).json({ error: "email is already exist" });
-			}
-			next();
-		})
-		.catch((err) => {
-			next(err);
-		});
+
+	try {
+		const [rows] = await conn.query<CustomerData[]>(
+			`SELECT * FROM customers WHERE email = ${mysql.escape(
+				validReqBody.email,
+			)}`,
+		);
+
+		if (rows.length > 0) {
+			return res.status(400).json({ error: "email is already exist" });
+		}
+		next();
+	} catch (err) {
+		next(err);
+	} finally {
+		await conn.end();
+	}
 };
+
+// export const checkDuplicateUser: RequestHandler = (req, res, next) => {
+// 	const validReqBody = req.body as mySchema;
+// 	let connection: Connection;
+// 	mySqlConnection()
+// 		.then((conn) => {
+// 			connection = conn;
+// 			return conn.query<CustomerData[]>(
+// 				`SELECT * FROM customers WHERE email = ${mysql.escape(
+// 					validReqBody.email,
+// 				)}`,
+// 			);
+// 		})
+// 		.then(([rows]) => {
+// 			// connection.end();
+// // 			console.log("->", rows);
+// 			if (rows.length > 0) {
+// 				return res.status(400).json({ error: "email is already exist" });
+// 			}
+// 			next();
+// 		})
+// 		.catch((err) => {
+// 			next(err);
+// 		});
+// };

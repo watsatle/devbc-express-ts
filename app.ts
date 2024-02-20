@@ -5,6 +5,7 @@ import mysql, { type Connection } from "mysql2/promise";
 import cors from "cors";
 import z from "zod";
 import { createCustomer } from "./middleweres/customer/post";
+import { transactionReq } from "./middleweres/transaction/post";
 
 export const app = express();
 
@@ -21,43 +22,9 @@ export function mySqlConnection() {
 	});
 }
 
-// app.post('/debug/:id/:foo', (req, res) => {
-//   res.json({test : "post",
-//   query : req.query,
-//   param : req.params,
-//   body : req.body,})
-// });
+app.post("/customers", ...createCustomer);
 
-//all menu
-app.get("/customer", (req, res) => {
-	mySqlConnection()
-		.then((conn) => conn.query("SELECT * FROM customers "))
-		.then(([rows]) => res.json({ result: rows }))
-		.catch((err) => {
-			res.status(500).send(err);
-		});
-});
-
-app.get("/menu", (req, res) => {
-	mySqlConnection()
-		.then((conn) => conn.query("SELECT * FROM food_items "))
-		.then(([rows]) => res.json({ result: rows }))
-		.catch((err) => {
-			res.status(500).send(err);
-		});
-});
-
-// get store_id
-app.get("/store/:id", (req, res) => {
-	mySqlConnection()
-		.then((conn) =>
-			conn.query(`SELECT * FROM stores WHERE id = ${req.params.id}`),
-		)
-		.then(([rows]) => res.json({ result: rows }))
-		.catch((err) => {
-			res.status(500).send(err);
-		});
-});
+app.post("/transactions", ...transactionReq);
 
 app.post("/customer/2", (req, res) => {
 	const name = req.body.name;
@@ -101,21 +68,44 @@ app.post("/customer/2", (req, res) => {
 		});
 });
 
-app.post("/customers", ...createCustomer);
-
-app.post("/transaction", (req, res) => {
-	mySqlConnection().then((conn) =>
-		conn
-			.query(`INSERT INTO transaction (customer_id)'
-                                    VALUES (1)`)
-
-			.then(([rows]) => res.json({ result: rows }))
-			.catch((err) => {
-				res.status(500).send(err);
-			}),
-	);
+app.get("/health", (_req, res) => {
+	res.status(200).json({
+		status: "OK",
+		details: "All systems are functioning properly",
+		timestamp: new Date().toISOString(),
+	});
 });
 
+//all menu
+app.get("/customer", (req, res) => {
+	mySqlConnection()
+		.then((conn) => conn.query("SELECT * FROM customers "))
+		.then(([rows]) => res.json({ result: rows }))
+		.catch((err) => {
+			res.status(500).send(err);
+		});
+});
+
+app.get("/menu", (req, res) => {
+	mySqlConnection()
+		.then((conn) => conn.query("SELECT * FROM food_items "))
+		.then(([rows]) => res.json({ result: rows }))
+		.catch((err) => {
+			res.status(500).send(err);
+		});
+});
+
+// get store_id
+app.get("/store/:id", (req, res) => {
+	mySqlConnection()
+		.then((conn) =>
+			conn.query(`SELECT * FROM stores WHERE id = ${req.params.id}`),
+		)
+		.then(([rows]) => res.json({ result: rows }))
+		.catch((err) => {
+			res.status(500).send(err);
+		});
+});
 app.patch("/customer/3", (req, res) => {
 	mySqlConnection()
 		.then((conn) =>
@@ -138,13 +128,12 @@ app.delete("/del", (req, res) => {
 		});
 });
 
-app.get("/health", (_req, res) => {
-	res.status(200).json({
-		status: "OK",
-		details: "All systems are functioning properly",
-		timestamp: new Date().toISOString(),
-	});
-});
+// app.post('/debug/:id/:foo', (req, res) => {
+//   res.json({test : "post",
+//   query : req.query,
+//   param : req.params,
+//   body : req.body,})
+// });
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 	res.status(500);
