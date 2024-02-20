@@ -26,7 +26,25 @@ app.post("/customers", ...createCustomer);
 
 app.post("/transactions", ...transactionReq);
 
-app.post("/customer/2", (req, res) => {
+app.get("/menu", (req, res) => {
+	mySqlConnection()
+		.then((conn) => conn.query("SELECT * FROM food_items "))
+		.then(([rows]) => res.json({ result: rows }))
+		.catch((err) => {
+			res.status(500).send(err);
+		});
+});
+
+app.get("/customer", (req, res) => {
+	mySqlConnection()
+		.then((conn) => conn.query("SELECT id FROM customers WHERE id='2'"))
+		.then(([rows]) => res.json({ result: rows }))
+		.catch((err) => {
+			res.status(500).send(err);
+		});
+});
+
+app.post("/unused", (req, res) => {
 	const name = req.body.name;
 
 	const mySchema = z.object({
@@ -77,23 +95,6 @@ app.get("/health", (_req, res) => {
 });
 
 //all menu
-app.get("/customer", (req, res) => {
-	mySqlConnection()
-		.then((conn) => conn.query("SELECT * FROM customers "))
-		.then(([rows]) => res.json({ result: rows }))
-		.catch((err) => {
-			res.status(500).send(err);
-		});
-});
-
-app.get("/menu", (req, res) => {
-	mySqlConnection()
-		.then((conn) => conn.query("SELECT * FROM food_items "))
-		.then(([rows]) => res.json({ result: rows }))
-		.catch((err) => {
-			res.status(500).send(err);
-		});
-});
 
 // get store_id
 app.get("/store/:id", (req, res) => {

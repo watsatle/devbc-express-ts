@@ -1,4 +1,7 @@
 import { RequestHandler } from "express";
-import { handlerTransaction } from "./handler_transaction";
+import { handlerTransaction, schemaValidation } from "./handler_transaction";
 
-export const transactionReq: RequestHandler[] = [handlerTransaction];
+export const transactionReq: RequestHandler[] = [
+	schemaValidation,
+	handlerTransaction,
+];
