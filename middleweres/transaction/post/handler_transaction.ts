@@ -4,19 +4,29 @@ import z from "zod";
 import mysql, { ResultSetHeader } from "mysql2/promise";
 
 export const ReqBodyTransaction = z.object({
-	customer_id: z.number(),
-
-	food_item_id: z.number(),
-	quantity: z.number(),
+	customerId: z.number(),
+	orderItems: z
+		.array(
+			z.object({
+				foodItemId: z.number(),
+				quantity: z.number(),
+			}),
+		)
+		.min(1),
 });
 export type ReqBodyTransaction = z.infer<typeof ReqBodyTransaction>;
+export const schemaValidation: RequestHandler = (req, res, next) => {
+	const validateReqBody = ReqBodyTransaction.safeParse(req.body);
+
+	if (!validateReqBody.success) {
+		return res.status(400).json({ error: validateReqBody.error });
+	}
+	next();
+};
 
 export const handlerTransaction: RequestHandler = async (req, res, next) => {
-	const {
-		customer_id: reqCustomerId,
-		food_item_id: reqFoodItemId,
-		quantity: reqQuantity,
-	}: ReqBodyTransaction = req.body;
+	const { customerId: reqCustomerId, orderItems }: ReqBodyTransaction =
+		req.body;
 
 	const conn = await mySqlConnection().catch(next);
 	if (!conn) return;
@@ -27,10 +37,18 @@ export const handlerTransaction: RequestHandler = async (req, res, next) => {
 			`INSERT INTO transactions (customer_id) VALUES (${reqCustomerId}
 			)`,
 		);
-		console.log("-> shoudbe insert transactions", rows.insertId);
-		await conn.query(
-			`INSERT INTO order_items (transaction_id, food_item_id, quantity) VALUES (${rows.insertId}, ${reqFoodItemId}, ${reqQuantity})`,
+
+		const insertOrderItem = orderItems.map((value) => [
+			rows.insertId,
+			value.foodItemId,
+			value.quantity,
+		]);
+		const format = conn.format(
+			"INSERT INTO order_items (transaction_id, food_item_id, quantity) VALUES ? ;",
+			[insertOrderItem],
 		);
+		console.log("->format", format);
+		await conn.query(format);
 
 		await conn.commit();
 		res.json([{ msaasge: "Create Complete" }]);
