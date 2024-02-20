@@ -1,0 +1,22 @@
+{
+  "name": "test",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "TZ='Asia/Bangkok' jest --runInBand --passWithNoTests --logHeapUsage --detectOpenHandles"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/supertest": "^6.0.2",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "jest": "^29.7.0",
+    "mysql2": "^3.9.1",
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.1.2"
+  }
+}
